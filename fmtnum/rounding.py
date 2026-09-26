@@ -18,8 +18,10 @@ def to_decimal(value):
         return value
     if isinstance(value, bool):
         raise FmtNumError("不支持的数值类型：bool")
-    if isinstance(value, (int, float)):
+    if isinstance(value, int):
         return Decimal(value)
+    if isinstance(value, float):
+        return Decimal(str(value))
     if isinstance(value, str):
         try:
             return Decimal(value.strip())
@@ -28,9 +30,9 @@ def to_decimal(value):
     raise FmtNumError("不支持的数值类型：%s" % type(value).__name__)
 
 
-def _should_round_up(rest, mode):
-    """rest 是被丢弃的小数位串（至少一位），返回是否向上进位。"""
-    if not rest:
+def _should_round_up(rest, mode, last_kept):
+    """rest 是被丢弃的小数位串（至少一位），last_kept 是保留部分末位数字。"""
+    if not rest or not rest.strip("0"):
         return False
     if mode == "DOWN":
         return False
@@ -41,7 +43,11 @@ def _should_round_up(rest, mode):
         return True
     if head < "5":
         return False
-    return True
+    if rest[1:].strip("0"):
+        return True
+    if mode == "HALF_UP":
+        return True
+    return last_kept in "13579"
 
 
 def round_digits(int_part, frac_part, digits, mode):
@@ -54,11 +60,15 @@ def round_digits(int_part, frac_part, digits, mode):
 
     keep = frac_part[:digits]
     rest = frac_part[digits:]
-    if not _should_round_up(rest, mode):
+    last_kept = (keep or int_part or "0")[-1]
+    if not _should_round_up(rest, mode, last_kept):
         return int_part, keep
 
     if digits == 0:
-        return str(int(int_part) + 1), ""
+        return str(int(int_part or "0") + 1), ""
 
-    bumped = str(int(keep) + 1).zfill(len(keep))
-    return int_part, bumped
+    bumped = str(int(keep) + 1)
+    if len(bumped) > len(keep):
+        int_part = str(int(int_part or "0") + 1)
+        bumped = bumped[1:]
+    return int_part, bumped.zfill(len(keep))
