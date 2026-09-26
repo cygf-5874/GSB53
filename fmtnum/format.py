@@ -34,9 +34,6 @@ def _split(number):
     return neg, int_part, frac_part
 
 
-def _is_zero(int_part, frac_part):
-    return not int_part.strip("0") and not frac_part.strip("0")
-
 
 def format_fixed(value, digits, mode, grouping=None):
     """把 ``value`` 按 ``digits`` 位小数、``mode`` 舍入，可选千分位分组。"""
@@ -56,6 +53,6 @@ def format_fixed(value, digits, mode, grouping=None):
         int_part = "0"
 
     body = group_digits(int_part, grouping) + ("." + frac_part if digits > 0 else "")
-    if neg and not _is_zero(int_part, frac_part):
+    if neg:
         body = "-" + body
     return body

@@ -25,7 +25,7 @@ def group_digits(int_part, grouping):
         head, tail = int_part[:-3], int_part[-3:]
         groups = [tail]
         while head:
-            groups.append(head[-3:])
-            head = head[:-3]
+            groups.append(head[-2:])
+            head = head[:-2]
         return ",".join(reversed(groups))
     raise FmtNumError("不支持的分组方式：%r" % (grouping,))
